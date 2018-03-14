@@ -1,26 +1,33 @@
 package main
 
 import (
-	"log"
 	"net/http"
-	"time"
 
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
+)
+
+type (
+	health struct {
+		ServiceName string `json:"serviceName"`
+		Alive       bool   `json:"alive"`
+	}
 )
 
 func main() {
-	r := mux.NewRouter()
+	// Echo instance
+	e := echo.New()
 
-	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello from Profile Service"))
+	// Middleware
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+
+	// Route => handler
+	e.GET("/health", func(c echo.Context) error {
+		u := health{Alive: true, ServiceName: "svc-profile"}
+		return c.JSON(http.StatusOK, u)
 	})
 
-	srv := &http.Server{
-		Handler:      r,
-		Addr:         "127.0.0.1:8080",
-		WriteTimeout: 15 * time.Second,
-		ReadTimeout:  15 * time.Second,
-	}
-
-	log.Fatal(srv.ListenAndServe())
+	// Start server
+	e.Logger.Fatal(e.Start(":8080"))
 }
