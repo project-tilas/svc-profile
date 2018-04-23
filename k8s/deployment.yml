@@ -1,0 +1,38 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: svc-profile
+  labels: 
+    app: svc-profile
+spec:
+  replicas: 1
+  template:
+    metadata: 
+      labels: 
+        app: svc-profile
+    spec:
+      containers:
+      - name: svc-profile
+        image: gcr.io/project-tilas/svc-profile:${TAG}
+        command:
+        ports:
+          - containerPort: 8080
+        volumeMounts:
+          - name: svc-profile-config
+            mountPath: /etc/svc-profile/
+            readOnly: true
+      volumes:
+        - name: svc-profile-config
+          configMap: { name: svc-profile-config } 
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: svc-profile
+spec:
+  selector:
+    app: svc-profile
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
